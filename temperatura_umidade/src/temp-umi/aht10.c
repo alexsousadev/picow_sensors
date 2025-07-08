@@ -1,0 +1,77 @@
+#include "aht10.h"
+
+aht10_data_t aht10_data;
+
+void aht10_init() {
+    i2c_init(AHT10_I2C_PORT, AHT10_I2C_BAUDRATE);
+    gpio_set_function(AHT10_SDA_PIN, GPIO_FUNC_I2C);
+    gpio_set_function(AHT10_SCL_PIN, GPIO_FUNC_I2C);
+    gpio_pull_up(AHT10_SDA_PIN);
+    gpio_pull_up(AHT10_SCL_PIN);
+
+    printf("I2C0 para AHT10 configurado. Tentando resetar AHT10...\n");
+    aht10_reset();
+
+    uint8_t init_cmd[3] = {AHT10_CMD_INITIALIZE, 0x08, 0x00};
+    int ret = i2c_write_blocking(AHT10_I2C_PORT, AHT10_ADDR, init_cmd, 3, false);
+    
+    if (ret == PICO_ERROR_GENERIC) {
+        printf("Erro ao escrever comando de inicializacao para AHT10.\n");
+        return;
+    }
+
+    sleep_ms(300);
+
+    uint8_t status;
+    i2c_read_blocking(AHT10_I2C_PORT, AHT10_ADDR, &status, 1, false);
+    if (!(status & AHT10_STATUS_CAL_MASK)) {
+        printf("AHT10 NAO CALIBRADO! Tente reiniciar o sistema.\n");
+    } else {
+        printf("AHT10 inicializado e calibrado com sucesso.\n");
+    }
+}
+
+void aht10_reset() {
+    uint8_t reset_cmd = AHT10_CMD_SOFT_RESET;
+    int ret = i2c_write_blocking(AHT10_I2C_PORT, AHT10_ADDR, &reset_cmd, 1, false);
+    if (ret == PICO_ERROR_GENERIC) {
+        printf("Erro ao enviar comando de reset para AHT10.\n");
+    }
+    sleep_ms(20);
+}
+
+bool aht10_read_data(aht10_data_t *data) {
+    uint8_t measure_cmd[3] = {AHT10_CMD_MEASURE, 0x33, 0x00};
+    int ret = i2c_write_blocking(AHT10_I2C_PORT, AHT10_ADDR, measure_cmd, 3, false);
+    if (ret == PICO_ERROR_GENERIC) {
+        printf("Erro ao enviar comando de medicao para AHT10.\n");
+        return false;
+    }
+
+    sleep_ms(80);
+
+    uint8_t status_byte;
+    i2c_read_blocking(AHT10_I2C_PORT, AHT10_ADDR, &status_byte, 1, false);
+
+    if (status_byte & AHT10_STATUS_BUSY_MASK) {
+        printf("AHT10 Ocupado, nao foi possivel ler os dados.\n");
+        return false;
+    }
+
+    uint8_t raw_data[6];
+    ret = i2c_read_blocking(AHT10_I2C_PORT, AHT10_ADDR, raw_data, 6, false);
+    if (ret == PICO_ERROR_GENERIC) {
+        printf("Erro ao ler dados do AHT10.\n");
+        return false;
+    }
+
+    uint32_t raw_humidity = ((uint32_t)raw_data[1] << 16) | ((uint32_t)raw_data[2] << 8) | raw_data[3];
+    raw_humidity = raw_humidity >> 4;
+
+    uint32_t raw_temperature = ((uint32_t)raw_data[3] & 0x0F) << 16 | ((uint32_t)raw_data[4] << 8) | raw_data[5];
+
+    data->humidity = (float)raw_humidity * 100.0f / 1048576.0f;
+    data->temperature = (float)raw_temperature * 200.0f / 1048576.0f - 50.0f;
+
+    return true;
+}
