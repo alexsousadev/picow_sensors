@@ -12,7 +12,8 @@
 // Declarações de variáveis globais
 extern ssd1306_t ssd;
 
-// Protótipos de funções
 void init_display(void);
+void draw_lux_static_text(void);
+void clear_display_line(int y_position, int x_start, int width);
 void show_lux_level(float lux_level);
 char *float_to_string(float num);

@@ -15,9 +15,8 @@ int main() {
             printf("Umidade: %.2f %%\nTemperatura: %.2f C\n\n", aht10_data.humidity, aht10_data.temperature);
             show_temp_humi();
         } else {
-            printf("Falha na leitura do AHT10. Tentando resetar...\n");
+            printf("Falha na leitura do AHT10.\n");
             aht10_reset();
-            sleep_ms(100);
         }
         sleep_ms(200);
     }

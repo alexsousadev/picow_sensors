@@ -16,4 +16,5 @@ extern ssd1306_t ssd;
 void init_display(void);
 void show_temp_humi(void);
 char *float_to_string(float num);
+void clear_display_line(int y_position, int x_start, int width);
 void define_warning();

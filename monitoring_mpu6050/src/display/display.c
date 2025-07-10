@@ -36,28 +36,36 @@ char *float_to_string(float num)
     return str;
 }
 
+// Função para limpar uma linha específica do display
+void clear_display_line(int y_position, int x_start, int width)
+{
+    ssd1306_draw_string(&ssd, "                    ", x_start, y_position);
+}
+
 // Exibe os valores do MPU6050 no display
 void show_mpu6050_values()
 {
     ssd1306_clear_screen(&ssd);
-    snprintf(pitch_str, sizeof(pitch_str), "Pitch: %.1f C", current_mpu6050_data.pitch);
-    snprintf(roll_str, sizeof(roll_str), "Roll: %.1f %%", current_mpu6050_data.roll);
+    snprintf(pitch_str, sizeof(pitch_str), "Pitch: %.1f", current_mpu6050_data.pitch);
+    snprintf(roll_str, sizeof(roll_str), "Roll: %.1f", current_mpu6050_data.roll);
     ssd1306_draw_string(&ssd, pitch_str, 0, 0);
     ssd1306_draw_string(&ssd, roll_str, 0, 10);
+    ssd1306_send_data(&ssd);
 
-    if (current_mpu6050_data.pitch > 60 || current_mpu6050_data.roll > 60){
-        
-        if(current_mpu6050_data.pitch > 60){
-            ssd1306_draw_string(&ssd, "Pitch no limite", 0, 30);
+    if (current_mpu6050_data.pitch > LIMIT_ANGLE || current_mpu6050_data.roll > LIMIT_ANGLE){
+
+        if(current_mpu6050_data.pitch > LIMIT_ANGLE){
+            ssd1306_draw_string(&ssd, "Pitch no limite\n", 0, 30);
+            printf("Pitch no limite\n");    
             ssd1306_send_data(&ssd);
         }
 
-        if(current_mpu6050_data.roll > 60){
-            ssd1306_draw_string(&ssd, "Roll no limite", 0, 40);
+        if(current_mpu6050_data.roll > LIMIT_ANGLE){
+            ssd1306_draw_string(&ssd, "Roll no limite\n", 0, 40);
+            printf("Roll no limite\n");
             ssd1306_send_data(&ssd);
         }
 
     }
 
-    ssd1306_send_data(&ssd);
 }

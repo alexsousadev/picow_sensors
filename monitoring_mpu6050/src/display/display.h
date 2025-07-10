@@ -16,4 +16,5 @@ extern ssd1306_t ssd;
 // Protótipos de funções
 void init_display(void);
 void show_mpu6050_values(void);
+void clear_display_line(int y_position, int x_start, int width);
 char *float_to_string(float num);

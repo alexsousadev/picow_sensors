@@ -81,13 +81,3 @@ void mpu6050_read_values() {
     mpu6050_read_raw(current_mpu6050_data.accel, current_mpu6050_data.gyro);
     calculate_angles(current_mpu6050_data.accel, &current_mpu6050_data.pitch, &current_mpu6050_data.roll);
 }
-
-// Função para verificar alertas de inclinação
-void mpu6050_check_alert(mpu6050_data_t *data) {
-    if (fabsf(data->pitch) > ANGULO_ALERTA_GRAUS || fabsf(data->roll) > ANGULO_ALERTA_GRAUS) {
-        printf("\n🚨 ALERTA: Inclinacao excedida! 🚨\n");
-        printf("   Pitch: %.2f° (limite: %.1f°)\n", data->pitch, ANGULO_ALERTA_GRAUS);
-        printf("   Roll: %.2f° (limite: %.1f°)\n", data->roll, ANGULO_ALERTA_GRAUS);
-        printf("   Ajuste a posicao do sensor!\n\n");
-    }
-}

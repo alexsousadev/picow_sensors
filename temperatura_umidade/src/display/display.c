@@ -3,9 +3,8 @@
 #include "src/display/display.h"
 #include "src/temp-umi/aht10.h"
 
-//==============================================================================
-// Exibição no Display
-//==============================================================================
+#define TEMP_WARNING_LIMIT 33.0f
+#define HUMI_WARNING_LIMIT 50.0f
 
 ssd1306_t ssd;
 char temperature_str[32];
@@ -26,7 +25,6 @@ void show_temp_humi()
     ssd1306_draw_string(&ssd, temperature_str, 0, 0);
     ssd1306_draw_string(&ssd, humidity_str, 0, 10);
     ssd1306_send_data(&ssd);
-
     define_warning();
 }
 
@@ -47,20 +45,27 @@ char *float_to_string(float num)
     return str;
 }
 
-void define_warning(){
-    if (aht10_data.temperature > 20.0 || aht10_data.humidity > 40.0){ 
-        ssd1306_draw_string(&ssd, "-- ALERTA --", 20, 30);
-        ssd1306_send_data(&ssd);
+// Função para limpar uma linha específica do display
+void clear_display_line(int y_position, int x_start, int width)
+{
+    ssd1306_draw_string(&ssd, "                    ", x_start, y_position);
+}
 
-        if (aht10_data.temperature > 28.2){
+// Define o aviso de temperatura ou umidade acima do limite
+void define_warning(){
+    bool alert = false;
+    if (aht10_data.temperature > TEMP_WARNING_LIMIT || aht10_data.humidity > HUMI_WARNING_LIMIT){ 
+        ssd1306_draw_string(&ssd, "-- ALERTA --", 20, 30);
+        alert = true;
+        if (aht10_data.temperature > TEMP_WARNING_LIMIT){
             ssd1306_draw_string(&ssd, "Temp acima", 0, 40);
-            ssd1306_send_data(&ssd);
         }
-        if (aht10_data.humidity > 48.8){
+        if (aht10_data.humidity > HUMI_WARNING_LIMIT){
             ssd1306_draw_string(&ssd, "Umi acima", 0, 50);
-            ssd1306_send_data(&ssd);
         }
     }
-
-    
+    if (alert) {
+        ssd1306_send_data(&ssd);
+    }
 }
+
